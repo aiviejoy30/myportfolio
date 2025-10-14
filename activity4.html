@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activity 4: Hover Image Reveal | Aivie Joy</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8f9fa, #e3f2fd); /* Light gradient matching portfolio theme */
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    /* Fixed Header with Back Button */
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .back-btn {
+      background: linear-gradient(135deg, #00bcd4, #25a5d7);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-btn:hover {
+      background: linear-gradient(135deg, #009bb0, #00bcd4);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+      color: #00bcd4;
+      margin: 0;
+    }
+
+    /* Main Content (Centered Card) */
+    main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding-top: 80px; /* Space for fixed header */
+      width: 100%;
+    }
+
+    .card {
+      width: 350px;
+      text-align: center;
+      background: linear-gradient(135deg, #ffffff, #f8f9fa); /* White/light gradient for card */
+      padding: 30px 20px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+      transition: all 0.8s ease-out;
+      border: 1px solid rgba(0, 188, 212, 0.1);
+      position: relative;
+    }
+
+    .card.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .card img {
+      display: block;
+      margin: 0 auto 20px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #00bcd4;
+      box-shadow: 0 5px 15px rgba(0, 188, 212, 0.2);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .card img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 25px rgba(0, 188, 212, 0.3);
+    }
+
+    /* Bio Text (Hidden by default, shows on image hover) */
+    .bio-text {
+      color: #555;
+      font-size: 1rem;
+      line-height: 1.4;
+      margin: 0;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transform: translateY(10px);
+      transition: all 0.4s ease;
+      padding: 0 10px;
+    }
+
+    /* Show bio on image hover */
+    .card:hover .bio-text {
+      opacity: 1;
+      max-height: 100px; /* Adjust based on text height */
+      transform: translateY(0);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      main {
+        padding-top: 100px;
+        padding: 20px;
+      }
+
+      .card {
+        width: 90%;
+        max-width: 300px;
+        padding: 20px 15px;
+      }
+
+      .card img {
+        width: 100px;
+        height: 100px;
+      }
+
+      .bio-text {
+        font-size: 0.9rem;
+        padding: 0 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Fixed Header with Back Button -->
+  <header>
+    <h1 class="page-title">Hover</h1>
+    <a href="index.html#portfolio" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Activities</a>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div class="card">
+      <img src="mine2.jpg" alt="Profile Picture"> <!-- Update path if needed, e.g., "images/profile.jpg" -->
+
+      <!-- Bio Text (Reveals on image hover) -->
+      <p class="bio-text">Passionate about clean UI and accessible web experiences.</p>
+    </div>
+  </main>
+
+  <script>
+    // Reveal animation on load (simple fade-in for card)
+    document.addEventListener("DOMContentLoaded", function () {
+      const card = document.querySelector(".card");
+      setTimeout(() => {
+        card.classList.add("active");
+      }, 200);
+    });
+  </script>
+</body>
+</html>
