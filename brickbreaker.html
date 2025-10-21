@@ -39,21 +39,43 @@
     letter-spacing: 1.6px;
     user-select: none;
   }
+  #controls {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+  }
+  button {
+    padding: 8px 16px;
+    font-size: 1.5rem;
+    background: #7890b7;
+    color: #cee0ff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #abcdeeee;
+  }
 </style>
 </head>
 <body>
 <div id="gameContainer">
   <canvas id="gameCanvas" width="560" height="400"></canvas>
   <div id="scoreboard">Score: 0 - Lives: 3 - High Score: 0 - Level: 1</div>
+  <div id="controls">
+    <button id="muteBtn">🔊</button>
+    <button id="pauseBtn">⏸️</button>
+  </div>
 </div>
 
 <script>
-// --- JS CODE (same as previous) ---
+// --- JS CODE (modified for icons on buttons) ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(frequency, duration=0.1, type='sine'){
+  if (isMuted) return; // Skip if muted
   const oscillator = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain();
   oscillator.connect(gainNode);
@@ -68,8 +90,15 @@ function playSound(frequency, duration=0.1, type='sine'){
 
 const paddle = { height:14, width:84, x:(canvas.width-84)/2, y:canvas.height-30, speed:8 };
 const ball = { radius:8, x:canvas.width/2, y:canvas.height-45, baseDx:3, baseDy:-3, dx:3, dy:-3 };
-const brick = { rowCount:4, columnCount:13, width:36, height:18, padding:6, offsetTop:44, offsetLeft:30 };
-const brickColors = ['#64beff','#99d52c','#fcd634','#a56da1','#dd2b3e','#dd2b3e','#a56da1','#fcd634','#99d52c','#64beff','#99d52c','#fcd634','#a56da1'];
+let brick = { rowCount:4, columnCount:13, width:36, height:18, padding:6, offsetTop:44, offsetLeft:30 };
+const levelColors = [
+  ['#64beff','#99d52c','#fcd634','#a56da1','#dd2b3e','#dd2b3e','#a56da1','#fcd634','#99d52c','#64beff','#99d52c','#fcd634','#a56da1'], // Level 1
+  ['#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffeaa7','#dda0dd','#98d8c8','#f7dc6f','#bb8fce','#85c1e9','#f8c471','#d7bde2','#a9dfbf'], // Level 2
+  ['#e74c3c','#9b59b6','#3498db','#2ecc71','#f1c40f','#e67e22','#1abc9c','#34495e','#e84393','#00cec9','#fdcb6e','#6c5ce7','#a29bfe'], // Level 3
+  ['#d63031','#0984e3','#00b894','#fd79a8','#f0932b','#6c5ce7','#a29bfe','#ffeaa7','#fab1a0','#81ecec','#fdcb6e','#e17055','#74b9ff'], // Level 4
+  ['#636e72','#2d3436','#ddd','#000','#fff','#ccc','#aaa','#888','#666','#444','#222','#111','#000'] // Level 5+
+];
+let brickColors = levelColors[0];
 let bricks = [];
 
 function resetBricks(){
@@ -82,8 +111,9 @@ function resetBricks(){
   }
 }
 
-let score=0, lives=3, highScore=parseInt(localStorage.getItem('brickBreakerHighScore'))||0;
+let score=0, lives=3, highScore=0; // Reset high score to 0
 let level=1, gameState='playing', rightPressed=false, leftPressed=false;
+let isMuted = false, isPaused = false;
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
@@ -118,6 +148,21 @@ function drawBricks(){
 }
 function drawScoreLives(){ document.getElementById('scoreboard').textContent=`Score: ${score} - Lives: ${lives} - High Score: ${highScore} - Level: ${level}`; }
 
+function levelUp(){
+  level++;
+  brick.rowCount = Math.min(brick.rowCount + 1, 10); // Increase rows, max 10
+  ball.baseDx += (ball.baseDx > 0 ? 0.5 : -0.5);
+  ball.baseDy += (ball.baseDy > 0 ? 0.5 : -0.5);
+  ball.dx = ball.baseDx;
+  ball.dy = ball.baseDy;
+  ball.x = canvas.width/2;
+  ball.y = canvas.height-45;
+  paddle.x = (canvas.width - paddle.width)/2;
+  brickColors = levelColors[Math.min(level-1, levelColors.length-1)];
+  resetBricks();
+  playSound(800, 0.2, 'sine'); // Level up sound
+}
+
 function collisionDetection(){
   for(let r=0;r<brick.rowCount;r++){
     for(let c=0;c<brick.columnCount;c++){
@@ -125,8 +170,8 @@ function collisionDetection(){
       if(b.status===1 && ball.x>b.x && ball.x<b.x+brick.width && ball.y>b.y && ball.y<b.y+brick.height){
         ball.dy=-ball.dy; b.status=0;
         score+=1; playSound(600,0.1,'square');
-        if(score>=20){ ball.dx*=1.02; ball.dy*=1.02; }
-        if(score>highScore){ highScore=score; localStorage.setItem('brickBreakerHighScore', highScore);}
+        if(score == brick.rowCount * brick.columnCount){ levelUp(); }
+        if(score>highScore){ highScore=score; }
       }
     }
   }
@@ -141,18 +186,31 @@ function collisionDetection(){
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   drawBricks(); drawPaddle(); drawBall(); drawScoreLives();
-  if(gameState==='playing'){
+  if(gameState==='playing' && !isPaused){
     ball.x+=ball.dx; ball.y+=ball.dy; collisionDetection();
     if(rightPressed && paddle.x<canvas.width-paddle.width) paddle.x+=paddle.speed;
     if(leftPressed && paddle.x>0) paddle.x-=paddle.speed;
   } else if(gameState==='gameOver'){
     ctx.fillStyle="#ff5050"; ctx.font="32px Segoe UI"; ctx.fillText("Game Over!",180,200);
     ctx.fillStyle="#cee0ff"; ctx.font="20px Segoe UI"; ctx.fillText("Click to Restart",140,240);
+  } else if(isPaused){
+    ctx.fillStyle="#cee0ff"; ctx.font="24px Segoe UI"; ctx.fillText("Paused",220,200);
   }
   requestAnimationFrame(draw);
 }
 
-function resetGame(){ gameState='playing'; score=0; lives=3; ball.x=canvas.width/2; ball.y=canvas.height-45; ball.dx=ball.baseDx; ball.dy=ball.baseDy; paddle.x=(canvas.width-paddle.width)/2; resetBricks(); }
+function resetGame(){ gameState='playing'; score=0; lives=3; level=1; brick.rowCount=4; ball.baseDx=3; ball.baseDy=-3; ball.x=canvas.width/2; ball.y=canvas.height-45; ball.dx=ball.baseDx; ball.dy=ball.baseDy; paddle.x=(canvas.width-paddle.width)/2; brickColors=levelColors[0]; resetBricks(); }
+
+// Button event listeners
+document.getElementById('muteBtn').addEventListener('click', () => {
+  isMuted = !isMuted;
+  document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
+});
+
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  isPaused = !isPaused;
+  document.getElementById('pauseBtn').textContent = isPaused ? '▶️' : '⏸️';
+});
 
 resetBricks();
 draw();
